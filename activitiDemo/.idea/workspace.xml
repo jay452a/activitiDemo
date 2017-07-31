@@ -50,8 +50,8 @@
       <file leaf-file-name="demo.js" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/src/js/demo.js">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="405">
-              <caret line="722" column="5" lean-forward="true" selection-start-line="722" selection-start-column="5" selection-end-line="722" selection-end-column="5" />
+            <state relative-caret-position="10296">
+              <caret line="726" column="67" lean-forward="true" selection-start-line="726" selection-start-column="67" selection-end-line="726" selection-end-column="67" />
               <folding>
                 <element signature="n#!!doc;n#Activiti#0" expanded="false" />
               </folding>
@@ -305,12 +305,12 @@
       <option name="presentableId" value="Default" />
       <updated>1500883286992</updated>
       <workItem from="1500883288334" duration="73348000" />
-      <workItem from="1501462818417" duration="17161000" />
+      <workItem from="1501462818417" duration="20578000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="90509000" />
+    <option name="totallyTimeSpent" value="93926000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="-8" y="-8" width="1456" height="876" extended-state="0" />
@@ -467,8 +467,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/src/js/demo.js">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="405">
-          <caret line="722" column="5" lean-forward="true" selection-start-line="722" selection-start-column="5" selection-end-line="722" selection-end-column="5" />
+        <state relative-caret-position="10296">
+          <caret line="726" column="67" lean-forward="true" selection-start-line="726" selection-start-column="67" selection-end-line="726" selection-end-column="67" />
           <folding>
             <element signature="n#!!doc;n#Activiti#0" expanded="false" />
           </folding>

@@ -712,12 +712,31 @@ class Activiti {
 //当流程节点移动的时候，折线图随之移动
     moveChangeSvg(){
         let flowDiv=document.querySelectorAll("div.flowIcon")
-        console.log(flowDiv)
         let svg=document.querySelectorAll("g")
-        console.log(svg[0].childNodes[0].getAttribute("d"))
+        console.log(flowDiv)
+        console.log(svg)
+        if(!svg){
+            return
+        }
         for(let i=0;i<flowDiv.length;i++){
             for (let j=0;j<svg.length;j++){
+                let start=svg[j].getAttribute('data-start')
+                let end =svg[j].getAttribute("data-end")
+                let pathStart=svg[j].getAttribute("data-path").split("-")[0]
+                let pathEnd=svg[j].getAttribute("data-path").split("-")[1]
+                if(flowDiv[i].getAttribute("data-row")==pathStart){
+                    let flowDivChildren=flowDiv[i].childNodes
+                    for(let k=0;k<flowDivChildren.length;k++){
+                        if(flowDivChildren[k].className==svg[j].getAttribute('data-start')){
+                            console.log(flowDivChildren[k].offsetLeft,flowDivChildren[k].offsetTop)
+                        }
 
+
+                    }
+                }
+                if(flowDiv[i].getAttribute("data-row")==pathEnd){
+                    console.log(flowDiv[i])
+                }
             }
         }
     }
