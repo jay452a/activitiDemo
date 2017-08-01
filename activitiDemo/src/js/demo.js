@@ -20,7 +20,22 @@ class Activiti {
         let resultSring=result.join("")
         return resultSring
     }
-
+    changeName(end){//降终点上下左右转换成点的className
+        switch (end) {
+            case "top":
+                end="dotT"
+                break;
+            case "bottom":
+                end="dotB"
+                break;
+            case "left":
+                end="dotL"
+                break;
+            default:
+                end="dotR"
+        }
+        return end
+    }
 
     //启动整个流程相关方法
     init(domId){
@@ -156,7 +171,7 @@ class Activiti {
                 let ev=window.event||e
                 if(isDown==true){
                     drag(ev)
-                    that.moveChangeSvg()
+                    that.moveChangeSvg(movedDom)
                 }
             }
             this.onmouseup=function (e) {
@@ -181,6 +196,7 @@ class Activiti {
         let pathD
         let flowWidth=document.querySelector(".flowIcon").offsetWidth/2
         let flowHeight=document.querySelector(".flowIcon").offsetHeight
+
         //获取滚动条高度
         let scrollTop=this.paintArea.scrollTop
         let scrollLeft=this.paintArea.scrollLeft
@@ -188,10 +204,8 @@ class Activiti {
         let windowScrollX=window.scrollX
         startX+=scrollLeft+windowScrollX
         startY+=scrollTop+windowScrollY
-        x+=scrollLeft+windowScrollX
-        y+=scrollTop+windowScrollY
         console.log(direct,nearlyName)
-
+        console.log(scrollTop,windowScrollY)
         if(!nearlyName){//如果没有进入流程div内
             switch (direct) {
                 case "dotB":
@@ -307,13 +321,13 @@ class Activiti {
         }
 
        if(nearlyName){
-           x-=scrollLeft+windowScrollX
-           y-=scrollTop+windowScrollY
            switch (direct) {
                case "dotT":
                      if(nearlyName=="left"){
+                         x-=6
                          if(x-startX>0&&y-startY<0){
-                             pathD="M"+startX+","+startY+" L"+startX+","+y+" L"+x+","+y
+                             pathD="M"+startX+","+startY+" L"+startX+","+(y+startY)/2+" L"+(x+startX)/2+","+(y+startY)/2+" L"+(x+startX)/2+","+y+
+                                     " L"+x+","+y
                          }
                          if(x-startX>0&&y-startY>=0){
                              pathD="M"+startX+","+startY+" L"+startX+","+(startY-30)+" L"+(x+startX)/2+","+(startY-30)+
@@ -329,6 +343,7 @@ class Activiti {
                          }
                      }
                      if(nearlyName=="right"){
+                         x+=6
                          if(x-startX>0&&y-startY<0){
                              pathD="M"+startX+","+startY+" L"+startX+","+(y+startY)/2+" L"+(x+30)+","+(y+startY)/2+
                                     " L"+(x+30)+","+y+" L"+x+","+y
@@ -338,7 +353,8 @@ class Activiti {
                                      " L"+(x+30)+","+y+" L"+x+","+y
                          }
                          if(x-startX<=0&&y-startY<0){
-                             pathD="M"+startX+","+startY+" L"+startX+","+y+" L"+x+","+y
+                             pathD="M"+startX+","+startY+" L"+startX+","+(y+startY)/2+" L"+(x+startX)/2+","+(y+startY)/2+" L"+(x+startX)/2+","+y+
+                                 " L"+x+","+y
                          }
                          if(x-startX<=0&&y-startY>=0){
                              pathD="M"+startX+","+startY+" L"+startX+","+(startY-30)+" L"+(x+startX)/2+","+(startY-30)+
@@ -346,6 +362,7 @@ class Activiti {
                          }
                      }
                      if(nearlyName=="top"){
+                         y-=6
                          if(y-startY<0){
                              pathD="M"+startX+","+startY+" L"+startX+","+(y-30)+" L"+x+","+(y-30)+" L"+x+","+y
                          }
@@ -354,6 +371,7 @@ class Activiti {
                          }
                      }
                      if(nearlyName=="bottom"){
+                         y+=6
                          if(y-startY<0){
                              pathD="M"+startX+","+startY+" L"+startX+","+(startY+y)/2+" L"+x+","+(startY+y)/2+" L"+x+","+y
                          }
@@ -365,6 +383,7 @@ class Activiti {
                      break;
                case "dotB":
                    if(nearlyName=="left"){
+                       x-=6
                        if(x-startX<0&&y-startY<0){
                            pathD="M"+startX+","+startY+" L"+startX+","+(startY+30)+" L"+(x-30)+","+(startY+30)+" L"+
                                (x-30)+","+y+" L"+x+","+y
@@ -378,10 +397,12 @@ class Activiti {
                                    " L"+(x-30)+","+y+" L"+x+","+y
                        }
                        if(x-startX>=0&&y-startY>=0){
-                           pathD="M"+startX+","+startY+" L"+startX+","+y+" L"+x+","+y
+                           pathD="M"+startX+","+startY+" L"+startX+","+(y+startY)/2+" L"+(x+startX)/2+","+(y+startY)/2+" L"+(x+startX)/2+","+y+
+                               " L"+x+","+y
                        }
                    }
                    if(nearlyName=="right"){
+                       x+=6
                        if(x-startX<0&&y-startY<0){
                            pathD="M"+startX+","+startY+" L"+startX+","+(startY+30)+" L"+(x+startX)/2+","+(startY+30)+
                                " L"+(x+startX)/2+","+y+" L"+x+","+y
@@ -391,7 +412,8 @@ class Activiti {
                                (x+30)+","+y+" L"+x+","+y
                        }
                        if(x-startX<0&&y-startY>=0){
-                           pathD="M"+startX+","+startY+" L"+startX+","+y+" L"+x+","+y
+                           pathD="M"+startX+","+startY+" L"+startX+","+(y+startY)/2+" L"+(x+startX)/2+","+(y+startY)/2+" L"+(x+startX)/2+","+y+
+                               " L"+x+","+y
                        }
                        if(x-startX>=0&&y-startY>=0){
                            pathD="M"+startX+","+startY+" L"+startX+","+(y+startY)/2+" L"+(x+30)+","+(y+startY)/2+
@@ -399,6 +421,7 @@ class Activiti {
                        }
                    }
                    if(nearlyName=="top"){
+                       y-=6
                        if(y-startY<0){
                            pathD="M"+startX+","+startY+" L"+startX+","+(startY+30)+" L"+(x+startX)/2+","+(startY+30)+
                                    " L"+(x+startX)/2+","+(y-30)+" L"+x+","+(y-30)+" L"+x+","+y
@@ -409,6 +432,7 @@ class Activiti {
                        }
                    }
                    if(nearlyName=="bottom"){
+                       y+=6
                        if(y-startY<0){
                            pathD="M"+startX+","+startY+" L"+startX+","+(startY+30)+" L"+x+","+(startY+30)+" L"+x+","+y
                        }
@@ -419,6 +443,7 @@ class Activiti {
                    break;
                case "dotL":
                    if(nearlyName=="left"){
+                       x-=6
                        if(x-startX<0){
                            pathD="M"+startX+","+startY+" L"+(x-30)+","+startY+" L"+(x-30)+","+y+" L"+x+","+y
                        }else{
@@ -426,6 +451,7 @@ class Activiti {
                        }
                    }
                    if(nearlyName=="right"){
+                       x+=6
                        if(x-startX<0){
                            pathD="M"+startX+","+startY+" L"+(x+startX)/2+","+startY+" L"+(x+startX)/2+","+y+" L"+x+","+y
                        }else{
@@ -434,6 +460,7 @@ class Activiti {
                        }
                    }
                    if(nearlyName=="top"){
+                       y-=6
                        if(x-startX<0&&y-startY<0){
                            pathD="M"+startX+","+startY+" L"+(x+startX)/2+","+startY+" L"+(x+startX)/2+","+(y-30)+" L"+x+","+(y-30)+
                                    ' L'+x+","+y
@@ -443,7 +470,8 @@ class Activiti {
                                   " L"+x+","+y
                        }
                        if(x-startX<0&&y-startY>=0){
-                           pathD="M"+startX+","+startY+" L"+x+","+startY+" L"+x+","+y
+                           pathD="M"+startX+","+startY+" L"+(x+startX)/2+","+startY+" L"+(x+startX)/2+","+(y+startY)/2+" L"+x+","+(y+startY)/2+
+                               " L"+x+","+y
                        }
                        if(x-startX>=0&&y-startY>=0){
                            pathD="M"+startX+","+startY+" L"+(startX-30)+","+startY+" L"+(startX-30)+","+(y+startY)/2+
@@ -451,8 +479,10 @@ class Activiti {
                        }
                    }
                    if(nearlyName=="bottom"){
+                       y+=6
                        if(x-startX<0&&y-startY<0){
-                           pathD="M"+startX+","+startY+" L"+x+","+startY+" L"+x+","+y
+                           pathD="M"+startX+","+startY+" L"+(x+startX)/2+","+startY+" L"+(x+startX)/2+","+(y+startY)/2+" L"+x+","+(y+startY)/2+
+                               " L"+x+","+y
                        }
                        if(x-startX>=0&&y-startY<0){
                            pathD="M"+startX+","+startY+" L"+(startX-30)+","+startY+" L"+(startX-30)+","+(y+startY)/2+
@@ -470,6 +500,7 @@ class Activiti {
                    break;
                default:
                    if(nearlyName=="left"){
+                       x-=6
                        if(x-startX<0){
                            pathD="M"+startX+","+startY+" L"+(startX+30)+","+startY+" L"+(startX+30)+","+(y+startY)/2+
                                    " L"+(x-30)+","+(y+startY)/2+" L"+(x-30)+","+y+" L"+x+","+y
@@ -478,6 +509,7 @@ class Activiti {
                        }
                    }
                    if(nearlyName=="right"){
+                       x+=6
                        if(x-startX<0){
                            pathD="M"+startX+","+startY+" L"+(startX+30)+","+startY+" L"+(startX+30)+","+y+" L"+x+","+y
                        }else{
@@ -485,6 +517,7 @@ class Activiti {
                        }
                    }
                    if(nearlyName=="top"){
+                       y-=6
                        if(x-startX<0&&y-startY<0){
                            pathD="M"+startX+","+startY+" L"+(startX+30)+","+startY+" L"+(startX+30)+","+(y-30)+
                                    " L"+x+","+(y-30)+" L"+x+","+y
@@ -498,16 +531,19 @@ class Activiti {
                                    " L"+x+","+(y+startY)/2+" L"+x+","+y
                        }
                        if(x-startX>=0&&y-startY>=0){
-                           pathD="M"+startX+","+startY+" L"+x+","+startY+" L"+x+","+y
+                           pathD="M"+startX+","+startY+" L"+(x+startX)/2+","+startY+" L"+(x+startX)/2+","+(y+startY)/2+" L"+x+","+(y+startY)/2+
+                               " L"+x+","+y
                        }
                    }
                    if(nearlyName=="bottom"){
+                       y+=6
                        if(x-startX<0&&y-startY<0){
                            pathD="M"+startX+","+startY+" L"+(startX+30)+","+startY+" L"+(startX+30)+","+(y+startY)/2+
                                " L"+x+","+(y+startY)/2+" L"+x+","+y
                        }
                        if(x-startX>=0&&y-startY<0){
-                           pathD="M"+startX+","+startY+" L"+x+","+startY+" L"+x+","+y
+                           pathD="M"+startX+","+startY+" L"+(x+startX)/2+","+startY+" L"+(x+startX)/2+","+(y+startY)/2+" L"+x+","+(y+startY)/2+
+                               " L"+x+","+y
                        }
                        if(x-startX<0&&y-startY>=0){
                            pathD="M"+startX+","+startY+" L"+(startX+30)+","+startY+" L"+(startX+30)+","+(y+30)+
@@ -710,32 +746,93 @@ class Activiti {
     }
 
 //当流程节点移动的时候，折线图随之移动
-    moveChangeSvg(){
-        let flowDiv=document.querySelectorAll("div.flowIcon")
+    moveChangeSvg(movedDom){
+        console.log(movedDom)
         let svg=document.querySelectorAll("g")
-        console.log(flowDiv)
+        console.log(movedDom.offsetLeft,movedDom.offsetTop)
         console.log(svg)
         if(!svg){
             return
         }
-        for(let i=0;i<flowDiv.length;i++){
-            for (let j=0;j<svg.length;j++){
-                let start=svg[j].getAttribute('data-start')
-                let end =svg[j].getAttribute("data-end")
-                let pathStart=svg[j].getAttribute("data-path").split("-")[0]
-                let pathEnd=svg[j].getAttribute("data-path").split("-")[1]
-                if(flowDiv[i].getAttribute("data-row")==pathStart){
-                    let flowDivChildren=flowDiv[i].childNodes
-                    for(let k=0;k<flowDivChildren.length;k++){
-                        if(flowDivChildren[k].className==svg[j].getAttribute('data-start')){
-                            console.log(flowDivChildren[k].offsetLeft,flowDivChildren[k].offsetTop)
+        let flowDivChildren=movedDom.childNodes
+        console.log(flowDivChildren)
+        for (let i=0;i<svg.length;i++){
+            let start=svg[i].getAttribute('data-start')
+            let end =this.changeName(svg[i].getAttribute("data-end"))
+            let pathStart=svg[i].getAttribute("data-path").split("-")[0]
+            let pathEnd=svg[i].getAttribute("data-path").split("-")[1]
+            if(movedDom.getAttribute("data-row")==pathStart){
+                 for(let j=0;j<flowDivChildren.length;j++){
+                     if(flowDivChildren[j].className==start){
+                         let startX=movedDom.offsetLeft+flowDivChildren[j].offsetLeft+flowDivChildren[j].offsetWidth/2
+                         let startY=movedDom.offsetTop+flowDivChildren[j].offsetTop+flowDivChildren[j].offsetHeight/2
+                         console.log(startX,startY)
+                         let path=svg[i].childNodes[0].getAttribute("d")
+                         let pathArr=path.split(" ")
+                         console.log(pathArr)
+                         pathArr[0]="M"+startX+","+startY
+
+                         if(start=="dotT"||start=="dotB"){
+                             let pathArr1=pathArr[1]
+                             let pathArr1Y=pathArr1.split(",")[1]
+                             let pathArr1New="L"+startX+","+pathArr1Y
+                             pathArr[1]=pathArr1New
+                             svg[i].childNodes[0].setAttribute("d",pathArr.join(" "))
+                         }
+                         if(start=="dotL"||start=="dotR"){
+                             let pathArr1=pathArr[1]
+                             let pathArr1X=pathArr1.split(",")[0]
+                             let pathArr1New=pathArr1X+","+startY
+                             pathArr[1]=pathArr1New
+                             svg[i].childNodes[0].setAttribute("d",pathArr.join(" "))
+                         }
+                     }
+                 }
+            }
+            if(movedDom.getAttribute("data-row")==pathEnd){
+                for(let k=0;k<flowDivChildren.length;k++){
+                    if(flowDivChildren[k].className==end){
+                        let endX=movedDom.offsetLeft+flowDivChildren[k].offsetLeft+flowDivChildren[k].offsetWidth/2
+                        let endY=movedDom.offsetTop+flowDivChildren[k].offsetTop+flowDivChildren[k].offsetHeight/2
+                        let path=svg[i].childNodes[0].getAttribute("d")
+                        let pathArr=path.split(" ")
+                        let length=pathArr.length
+
+                        console.log(pathArr,length)
+                        if(end=="dotT"||end=="dotB"){
+                            let pathArrLast2=pathArr[length-2]
+                            let pathArrLast2Y=pathArrLast2.split(",")[1]
+                            let pathArrLast2New="L"+endX+","+pathArrLast2Y
+
+                            let pathArrLast3=pathArr[length-3]
+                            let pathArrLast3X=pathArrLast3.split(",")[0]
+                            let pathArrLast3New
+                            pathArrLast2New="L"+endX+","+(end=="dotT"?endY-30:endY+30)
+                            pathArrLast3New=pathArrLast3X+","+(end=="dotT"?endY-30:endY+30)
+
+                            pathArr[length-1]="L"+endX+","+(end=="dotT"?endY-6:endY+6)
+                            pathArr[length-2]=pathArrLast2New
+                            pathArr[length-3]=pathArrLast3New
+                            let pathString=pathArr.join(" ")
+                            console.log(pathString)
+                            svg[i].childNodes[0].setAttribute("d",pathString)
                         }
 
 
+                       if(end=="dotL"||end=="dotR"){
+                            let pathArrLast2=pathArr[length-2]
+                            let pathArrLast2X=(end=="dotL"?endX-30:endX+30)
+                            let pathArrLast2New="L"+pathArrLast2X+","+endY
+                            let pathArrLast3=pathArr[length-3]
+                            let pathArrLast3Y=pathArrLast3.split(",")[1]
+                            let pathArrLast3New=pathArrLast2X+","+pathArrLast3Y
+                            pathArr[length-1]="L"+(end=="dotL"?endX-6:endX+6)+","+endY
+                            pathArr[length-2]=pathArrLast2New
+                            pathArr[length-3]=pathArrLast3New
+                            svg[i].childNodes[0].setAttribute("d",pathArr.join(" "))
+                        }
+
                     }
-                }
-                if(flowDiv[i].getAttribute("data-row")==pathEnd){
-                    console.log(flowDiv[i])
                 }
             }
         }
