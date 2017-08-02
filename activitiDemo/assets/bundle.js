@@ -201,8 +201,12 @@ var Activiti = function () {
                 var mouseY = ev.pageY;
                 var paintAreaOffsetX = paintArea.offsetLeft;
                 var paintAreaOffsetY = paintArea.offsetTop;
-                x = mouseX - paintAreaOffsetX;
-                y = mouseY - paintAreaOffsetY;
+                var scrollTop = paintArea.scrollTop;
+                var scrollLeft = paintArea.scrollLeft;
+                var windowScrollY = window.scrollY;
+                var windowScrollX = window.scrollX;
+                x = mouseX - paintAreaOffsetX + scrollLeft + windowScrollX;
+                y = mouseY - paintAreaOffsetY + scrollTop + windowScrollY;
             };
             addDom.ondragstart = function (e) {
                 //源对象开始被拖动
@@ -321,9 +325,10 @@ var Activiti = function () {
             startX += scrollLeft + windowScrollX;
             startY += scrollTop + windowScrollY;
             console.log(direct, nearlyName);
-            console.log(scrollTop, windowScrollY);
-            if (!nearlyName) {
+            if (nearlyName == undefined) {
                 //如果没有进入流程div内
+                x += scrollLeft + windowScrollX;
+                y += scrollTop + windowScrollY;
                 switch (direct) {
                     case "dotB":
                         if (x - startX <= 0 && y - startY >= 0) {
@@ -668,7 +673,7 @@ var Activiti = function () {
             var svgContainer = document.getElementById("paintSvg");
             var that = this;
             var direct = void 0;
-            var nearlyName = void 0; //获取最近点名称
+
             //当鼠标移动的时候绘图
             var paint = function paint(groupData, dataRow, cursorNode) {
                 var mouseX = cursorNode.clientX; //鼠标位置x
@@ -677,7 +682,7 @@ var Activiti = function () {
                 var paintAreaY = that.paintArea.offsetTop;
                 var x = mouseX - paintAreaX;
                 var y = mouseY - paintAreaY;
-
+                var nearlyName = void 0; //获取最近点名称
                 /*计算最近点*/
                 var endDom = void 0; //获取指向节点
                 if (cursorNode.target.className == "flowIcon") {

@@ -85,8 +85,8 @@ class Activiti {
         paintArea.ondragover=function (e) {//源对象悬停在目标对象上
             let ev=window.event||e
             ev.preventDefault();
-            let mouseX=ev.pageX
-            let mouseY=ev.pageY
+            let mouseX=ev.clientX
+            let mouseY=ev.clientY
             let paintAreaOffsetX=paintArea.offsetLeft
             let paintAreaOffsetY=paintArea.offsetTop
             let scrollTop=paintArea.scrollTop
@@ -98,6 +98,7 @@ class Activiti {
         }
         addDom.ondragstart=function (e) {//源对象开始被拖动
             let ev=window.event||e
+            ev.dataTransfer.setData("Text","");
         }
     }
     moveFlowIcon(movedDom){//可在绘图区域内移动节点
