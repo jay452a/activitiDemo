@@ -89,8 +89,12 @@ class Activiti {
             let mouseY=ev.pageY
             let paintAreaOffsetX=paintArea.offsetLeft
             let paintAreaOffsetY=paintArea.offsetTop
-            x=mouseX-paintAreaOffsetX
-            y=mouseY-paintAreaOffsetY
+            let scrollTop=paintArea.scrollTop
+            let scrollLeft=paintArea.scrollLeft
+            let windowScrollY=window.scrollY
+            let windowScrollX=window.scrollX
+            x=mouseX-paintAreaOffsetX+scrollLeft+windowScrollX
+            y=mouseY-paintAreaOffsetY+scrollTop+windowScrollY
         }
         addDom.ondragstart=function (e) {//源对象开始被拖动
             let ev=window.event||e
@@ -205,8 +209,9 @@ class Activiti {
         startX+=scrollLeft+windowScrollX
         startY+=scrollTop+windowScrollY
         console.log(direct,nearlyName)
-        console.log(scrollTop,windowScrollY)
-        if(!nearlyName){//如果没有进入流程div内
+        if(nearlyName==undefined){//如果没有进入流程div内
+            x+=scrollLeft+windowScrollX
+            y+=scrollTop+windowScrollY
             switch (direct) {
                 case "dotB":
                     if(x-startX<=0&&y-startY>=0){//往左下
@@ -571,7 +576,7 @@ class Activiti {
         let svgContainer=document.getElementById("paintSvg")
         let that=this
         let direct
-        let nearlyName //获取最近点名称
+
         //当鼠标移动的时候绘图
         const paint=function (groupData,dataRow,cursorNode) {
             let mouseX=cursorNode.clientX//鼠标位置x
@@ -580,7 +585,7 @@ class Activiti {
             let paintAreaY=that.paintArea.offsetTop
             let x=mouseX-paintAreaX
             let y=mouseY-paintAreaY
-
+            let nearlyName //获取最近点名称
             /*计算最近点*/
             let endDom//获取指向节点
             if(cursorNode.target.className=="flowIcon"){
