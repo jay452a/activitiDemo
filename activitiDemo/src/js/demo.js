@@ -36,12 +36,24 @@ class Activiti {
         }
         return end
     }
+    ajax(){//jq ajax
+
+    }
 
     //启动整个流程相关方法
     init(domId){
        let container=document.getElementById(domId)
-       let html="<div class='addArea'><span class='add' draggable='true'>添加流程</span></div>"
-           html+='<div id="paintArea">' +
+       let html="<header>" +
+                   "<div class='addArea'>" +
+                   "<span class='add' draggable='true'>添加流程</span></div>" +
+                   "<button class='delFlow'>删除</button>" +
+               "</header>"
+        //属性添加div
+        html+='<div class="setArea">' +
+                '<p>sdsad</p>' +
+              '</div>'
+        //画图区域div
+        html+='<div id="paintArea">' +
                '<svg id="paintSvg" xmlns="http://www.w3.org/2000/svg" version="1.1">' +
                '<defs> ' +
                    '<marker id="arrow" markerWidth="10" markerHeight="10" refx="0" refy="2" orient="auto" markerUnits="strokeWidth"> ' +
@@ -53,10 +65,40 @@ class Activiti {
         container.innerHTML=html
         this.addDom=document.querySelectorAll(".add")[0]
         this.addArea=document.querySelectorAll(".addArea")[0]
+        this.ininStartEnd()
+        this.deleteFlow()
         this.addNode()
 
     }
+    ininStartEnd(){//初始化开始和结束节点
+        let start='<div class="flowIcon" data-row="FLOWSTART" style="left: 400px; top: 100px;">' +
+                    '<span>开始</span>' +
+                    '<i class="dotL" data-row="FLOWSTART"></i>' +
+                    '<i class="dotR" data-row="FLOWSTART"></i>' +
+                    '<i class="dotT" data-row="FLOWSTART"></i>' +
+                    '<i class="dotB" data-row="FLOWSTART"></i>' +
+                  '</div>'
+        let end='<div class="flowIcon" data-row="FLOWEND" style="left: 400px; top: 400px;">' +
+                    '<span>结束</span>' +
+                    '<i class="dotL" data-row="FLOWEND"></i>' +
+                    '<i class="dotR" data-row="FLOWEND"></i>' +
+                    '<i class="dotT" data-row="FLOWEND"></i>' +
+                    '<i class="dotB" data-row="FLOWEND"></i>' +
+                '</div>'
+        $("#paintArea").append(start+end)
+        let moveDomStart=$(".flowIcon[data-row='FLOWSTART']").get(0)
+        let moveDomEnd=$(".flowIcon[data-row='FLOWEND']").get(0)
+        this.moveFlowIcon(moveDomStart)
+        this.paintArrow(moveDomStart)
+        this.moveFlowIcon(moveDomEnd)
+        this.paintArrow(moveDomEnd)
 
+    }
+    deleteFlow(){//删除节点
+        $(".delFlow").click(function () {
+            $("#paintArea").find(".checked").remove()
+        })
+    }
     addNode(){//向绘图区域添加节点
         let addDom=this.addDom  //获取添加节点
         let paintArea=document.getElementById("paintArea")
@@ -677,8 +719,12 @@ class Activiti {
         }
         //鼠标释放
         const dragOver=function (groupData,dataRow,cursorNode) {
+            //判断是否其他节点往开始节点画线
+            if(cursorNode.target.getAttribute("data-row")=="FLOWSTART"||cursorNode.target.parentNode.getAttribute("data-row")=="FLOWSTART"){
+                groupData.group.remove()
+                return
+            }
             //判断是否进入另外一个节点
-
             if(cursorNode.target.className=="flowIcon"||cursorNode.target.parentNode.className=="flowIcon"){
                 if(cursorNode.target.getAttribute("data-row")!=dataRow&&cursorNode.target.parentNode.getAttribute("data-row")!=dataRow){
                      let start=dataRow
@@ -694,7 +740,15 @@ class Activiti {
                          }
                      }
                      groupData.group.setAttribute("data-path",start+"-"+end)
-
+                     $(groupData.group).click(function () {
+                         if($(this).hasClass("checked")){
+                             $(this).removeClass("checked")
+                             $(this).find("path").removeAttr("stroke-dasharray")
+                         }else{
+                             $(this).addClass("checked")
+                             $(this).find("path").attr("stroke-dasharray","10")
+                         }
+                     })
                 }else{
                    // groupData.group.remove()
                 }
@@ -718,6 +772,7 @@ class Activiti {
                 let group=document.createElementNS("http://www.w3.org/2000/svg", "g");
                 //创建一条路径
                 let path=document.createElementNS("http://www.w3.org/2000/svg", "path");
+
                 svgContainer.appendChild(group)
                 group.appendChild(path)
                 let groupData={//包含svg组的一些信息
