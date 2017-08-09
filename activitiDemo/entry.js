@@ -6,7 +6,7 @@ import "./src/css/demo.less";
 import Act from "./src/js/demo.js"
 let $ = require('jquery');
 window.$ = $;
-console.log($)
+
 
 let act =new Act()
 act.init("mainFlow")

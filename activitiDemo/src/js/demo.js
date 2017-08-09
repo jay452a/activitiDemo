@@ -36,6 +36,14 @@ class Activiti {
         }
         return end
     }
+    clickDocument(){//点击文档隐藏一些东西
+        document.onmousedown=function (e) {
+            let ev=e||window.event
+            if(ev.target.tagName!="LI"&&ev.target.className!="del"){
+                $(".flowIcon,.tiaoJianIcon").find("ul").remove()
+            }
+        }
+    }
     ajax(){//jq ajax
 
     }
@@ -44,14 +52,15 @@ class Activiti {
     init(domId){
        let container=document.getElementById(domId)
        let html="<header>" +
-                   "<div class='addArea'>" +
-                   "<span class='add' draggable='true'>添加流程</span></div>" +
+                   "<div class='addArea' draggable='true'>" +
+                   "<span class='add'>添加流程</span></div>" +
+                   '<span class="addTiaojian" draggable="true">条件</span>'+
                    "<button class='delFlow'>删除</button>" +
                "</header>"
         //属性添加div
         html+='<div class="setArea">' +
                 '<p>sdsad</p>' +
-              '</div>'
+               '</div>'
         //画图区域div
         html+='<div id="paintArea">' +
                '<svg id="paintSvg" xmlns="http://www.w3.org/2000/svg" version="1.1">' +
@@ -65,10 +74,11 @@ class Activiti {
         container.innerHTML=html
         this.addDom=document.querySelectorAll(".add")[0]
         this.addArea=document.querySelectorAll(".addArea")[0]
+        this.addTiaojian=document.querySelectorAll(".addTiaojian")[0]
         this.ininStartEnd()
-        this.deleteFlow()
+        this.deleteLine()
         this.addNode()
-
+        this.clickDocument()
     }
     ininStartEnd(){//初始化开始和结束节点
         let start='<div class="flowIcon" data-row="FLOWSTART" style="left: 400px; top: 100px;">' +
@@ -94,13 +104,45 @@ class Activiti {
         this.paintArrow(moveDomEnd)
 
     }
-    deleteFlow(){//删除节点
+    deleteLine(){//删除线
         $(".delFlow").click(function () {
             $("#paintArea").find(".checked").remove()
         })
     }
+    deletFlow(movedDom){//删除节点
+        $(movedDom).find("img").mousedown(function (e) {
+            let ev=e||window.event
+            ev.stopPropagation()
+            ev.preventDefault()
+        })
+        $(movedDom).find("img").click(function (e) {
+            let ev=e||window.event
+            ev.stopPropagation()
+            $(this).next().remove()
+            let html='<ul><li class="del">删除节点</li></ul>'
+            $(this).after(html)
+            $(this).next().find("li").click(function (e) {
+                let ev=e||window.event
+                ev.stopPropagation()
+                let dataRow=$(movedDom).attr("data-row")
+                $("#paintSvg").find("g").each(function () {
+                    if($(this).attr("data-path").indexOf(dataRow)>-1){
+                        $(this).remove()
+                    }
+                })
+                $(movedDom).remove()
+
+            })
+            $(this).next().find("li").mousedown(function (e) {
+                let ev=e||window.event
+                ev.stopPropagation()
+                ev.preventDefault()
+            })
+        })
+    }
     addNode(){//向绘图区域添加节点
-        let addDom=this.addDom  //获取添加节点
+        let addArea=this.addArea  //获取添加节点
+        let addTiaojian=this.addTiaojian
         let paintArea=document.getElementById("paintArea")
         this.paintArea=paintArea
         let x
@@ -110,11 +152,21 @@ class Activiti {
             let ev=window.event||e
             let belongSring=that.getRandString()//用来标识某个节点路程
             ev.preventDefault();
+            let data=ev.dataTransfer.getData("Text");
+            console.log(data)
             let movedDom=document.createElement("div")
-            movedDom.setAttribute("class","flowIcon")
+            if(data=="addArea"){
+                movedDom.setAttribute("class","flowIcon")
+            }else{
+                movedDom.setAttribute("class","tiaoJianIcon")
+            }
             movedDom.setAttribute("data-row",belongSring)
-            let innerH='<span>添加流程</span>'
-                innerH+='<i class="dotL" data-row="'+belongSring+'"></i><i class="dotR" data-row="'+belongSring+'"></i><i class="dotT" data-row="'+belongSring+'"></i><i class="dotB" data-row="'+belongSring+'"></i>'
+            let innerH='<span>'+(data=="addArea"?"添加流程":"条件")+'</span>'
+                innerH+='<i class="dotL" data-row="'+belongSring+'"></i>' +
+                    '<i class="dotR" data-row="'+belongSring+'"></i>' +
+                    '<i class="dotT" data-row="'+belongSring+'"></i>' +
+                    '<i class="dotB" data-row="'+belongSring+'"></i>'+
+                    '<img src="./src/img/shenglue.png">'
             movedDom.innerHTML=innerH
             document.getElementById("paintArea").appendChild(movedDom)
             let movedDomWidth=movedDom.offsetWidth
@@ -123,6 +175,7 @@ class Activiti {
             movedDom.style.setProperty("top",(y-movedDomHeight/2)>0?(y-movedDomHeight/2)+"px":0)
             that.moveFlowIcon(movedDom)//可移动节点
             that.paintArrow(movedDom)//画线
+            that.deletFlow(movedDom)
         }
         paintArea.ondragover=function (e) {//源对象悬停在目标对象上
             let ev=window.event||e
@@ -138,9 +191,15 @@ class Activiti {
             x=mouseX-paintAreaOffsetX+scrollLeft+windowScrollX
             y=mouseY-paintAreaOffsetY+scrollTop+windowScrollY
         }
-        addDom.ondragstart=function (e) {//源对象开始被拖动
+        addArea.ondragstart=function (e) {//源对象开始被拖动
             let ev=window.event||e
-            ev.dataTransfer.setData("Text","");
+            let className=ev.target.className
+            ev.dataTransfer.setData("Text",className);
+        }
+        addTiaojian.ondragstart=function (e) {
+            let ev=window.event||e
+            let className=ev.target.className
+            ev.dataTransfer.setData("Text",className);
         }
     }
     moveFlowIcon(movedDom){//可在绘图区域内移动节点
@@ -631,15 +690,16 @@ class Activiti {
             let nearlyName //获取最近点名称
             /*计算最近点*/
             let endDom//获取指向节点
-            if(cursorNode.target.className=="flowIcon"){
+            if(cursorNode.target.className=="flowIcon"||cursorNode.target.className=="tiaoJianIcon"){
                 endDom=cursorNode.target
             }
-            if(cursorNode.target.parentNode.className=="flowIcon"){
+            if(cursorNode.target.parentNode.className=="flowIcon"||cursorNode.target.parentNode.className=="tiaoJianIcon"){
                 endDom=cursorNode.target.parentNode
             }
             //console.log(endDom)
 
-            if(cursorNode.target.className=="flowIcon"||cursorNode.target.parentNode.className=="flowIcon"){
+            if(cursorNode.target.className=="flowIcon"||cursorNode.target.parentNode.className=="flowIcon"
+                ||cursorNode.target.className=="tiaoJianIcon"||cursorNode.target.parentNode.className=="tiaoJianIcon"){
                 //计算出指向节点的上下左右四个位置坐标
                 let endDomT={}
                 let endDomB={}
@@ -725,7 +785,8 @@ class Activiti {
                 return
             }
             //判断是否进入另外一个节点
-            if(cursorNode.target.className=="flowIcon"||cursorNode.target.parentNode.className=="flowIcon"){
+            if(cursorNode.target.className=="flowIcon"||cursorNode.target.parentNode.className=="flowIcon"
+                ||cursorNode.target.className=="tiaoJianIcon"||cursorNode.target.parentNode.className=="tiaoJianIcon"){
                 if(cursorNode.target.getAttribute("data-row")!=dataRow&&cursorNode.target.parentNode.getAttribute("data-row")!=dataRow){
                      let start=dataRow
                      let end=cursorNode.target.getAttribute("data-row")||cursorNode.target.parentNode.getAttribute("data-row")
@@ -898,6 +959,7 @@ class Activiti {
             }
         }
     }
+  //以下为节点属性Js
 
 }
 
