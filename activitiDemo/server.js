@@ -6,7 +6,7 @@ var webpackDevMiddleware = require("webpack-dev-middleware");
 var webpackDevServer = require('webpack-dev-server');
 var config = require("./src/js/webpack.config.js");
 
-config.entry.index.unshift("webpack-dev-server/client?http://localhost:9000"); // 将执替换js内联进去
+config.entry.index.unshift("webpack-dev-server/client?http://localhost:8080"); // 将执替换js内联进去
 config.entry.index.unshift("webpack/hot/only-dev-server");
 
 var compiler = webpack(config);
@@ -17,10 +17,20 @@ var server = new webpackDevServer(compiler, {
     open:'true',
     stats: {
         colors: true // 用颜色标识
-
     },
     proxy: {
-        "*": "http://localhost:9000" // 用于转发api数据，但webpack自己提供的并不太好用
-    },
+
+        // '/test': {
+        //     target: 'http://10.0.51.9:8888/activiti-app/app/flaginfo',
+        //     secure: false,
+        //     changeOrigin: true
+        // }
+
+        '/test': {
+            target: 'http://10.0.51.9:8888/activiti-app/app/flaginfo',
+           // pathRewrite: {'^/activiti-app/app/flaginfo' : '/activiti-app/app/flaginfo'},
+            changeOrigin: true
+        }
+    }
 });
-server.listen(9000);
+server.listen(8080);

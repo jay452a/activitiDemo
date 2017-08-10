@@ -76,7 +76,7 @@ module.exports = {
         new ExtractTextPlugin('styles.css'),//帮助css单独打包
         //new ExtractTextPlugin('./dist/[name].less')
         new webpack.DefinePlugin({ //可以用于在生成环境上改变某些url，只要页面中用到BASEURL的地方会被替换为production
-            'BASEURL': JSON.stringify('production')
+            'BASEURL': JSON.stringify('/test')
         })
 
     ]

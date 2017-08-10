@@ -44,9 +44,7 @@ class Activiti {
             }
         }
     }
-    ajax(){//jq ajax
 
-    }
 
     //启动整个流程相关方法
     init(domId){
@@ -56,11 +54,15 @@ class Activiti {
                    "<span class='add'>添加流程</span></div>" +
                    '<span class="addTiaojian" draggable="true">条件</span>'+
                    "<button class='delFlow'>删除</button>" +
+                   "<button class='saveFlow'>保存</button>"+
                "</header>"
         //属性添加div
         html+='<div class="setArea">' +
-                '<p>sdsad</p>' +
-               '</div>'
+                '<h3>节点属性</h3>'+
+                '<div class="flowForm"><label for="flowName">名称</label><input type="text" id="flowName"></div>' +
+                '<div class="flowForm"><label for="flowDutyMan">负责人</label><input type="text" id="flowDutyMan"readonly></div>' +
+
+                '</div>'
         //画图区域div
         html+='<div id="paintArea">' +
                '<svg id="paintSvg" xmlns="http://www.w3.org/2000/svg" version="1.1">' +
@@ -79,16 +81,55 @@ class Activiti {
         this.deleteLine()
         this.addNode()
         this.clickDocument()
+
+    }
+    getStartId(){//获取开始流程ID
+         let that=this
+         let html='<div class="flowStartBox">' +
+                  '<header>开始流程</header>'+
+                  '<section>' +
+                  '<div class="flowFlex2"><label for="startName">流程名称</label><input id="startName"type="text"maxlength="15"></div>' +
+                  '<div class="flowFlex2"><label for="startDescribe">流程描述</label><textarea id="startDescribe"maxlength="150"></textarea></div>'+
+                  '</section>'+
+                  '<footer><button id="startFlowBtn">确定</button></footer>'
+                  '</div>'
+         let cover='<div class="flowCover"></div>'
+         $("body").append(html)
+         $("body").append(cover)
+         $("#startFlowBtn").click(function () {
+             $(".flowStartBox").find(".errorTips").remove()
+             let name=$("#startName").val()
+             let des=$("#startDescribe").val()
+             if(name.trim().length==""){
+                 $(".flowStartBox").find("section").append('<p class="errorTips">流程名称不能为空！</p>')
+                 return
+             }
+             let postData={
+                 name:name,
+                 description:des,
+                 key:that.getRandString()
+             }
+             console.log(BASEURL)
+             $.ajax({
+                 type:"post",
+                 url:"/test/model/create",
+                 async:true,
+                 data:postData,
+                 success:function (data) {
+
+                 }
+             });
+         })
     }
     ininStartEnd(){//初始化开始和结束节点
-        let start='<div class="flowIcon" data-row="FLOWSTART" style="left: 400px; top: 100px;">' +
+        let start='<div class="flowIcon" data-row="FLOWSTART" style="left: 400px; top: 100px;"data-name="开始">' +
                     '<span>开始</span>' +
                     '<i class="dotL" data-row="FLOWSTART"></i>' +
                     '<i class="dotR" data-row="FLOWSTART"></i>' +
                     '<i class="dotT" data-row="FLOWSTART"></i>' +
                     '<i class="dotB" data-row="FLOWSTART"></i>' +
                   '</div>'
-        let end='<div class="flowIcon" data-row="FLOWEND" style="left: 400px; top: 400px;">' +
+        let end='<div class="flowIcon" data-row="FLOWEND" style="left: 400px; top: 400px;"data-name="结束">' +
                     '<span>结束</span>' +
                     '<i class="dotL" data-row="FLOWEND"></i>' +
                     '<i class="dotR" data-row="FLOWEND"></i>' +
@@ -102,7 +143,7 @@ class Activiti {
         this.paintArrow(moveDomStart)
         this.moveFlowIcon(moveDomEnd)
         this.paintArrow(moveDomEnd)
-
+        this.getStartId()//获取开始流程ID
     }
     deleteLine(){//删除线
         $(".delFlow").click(function () {
@@ -161,6 +202,7 @@ class Activiti {
                 movedDom.setAttribute("class","tiaoJianIcon")
             }
             movedDom.setAttribute("data-row",belongSring)
+            movedDom.setAttribute("data-name",(data=="addArea"?"添加流程":"条件"))
             let innerH='<span>'+(data=="addArea"?"添加流程":"条件")+'</span>'
                 innerH+='<i class="dotL" data-row="'+belongSring+'"></i>' +
                     '<i class="dotR" data-row="'+belongSring+'"></i>' +
@@ -273,6 +315,7 @@ class Activiti {
             isDown=true
             startX=ev.clientX
             startY=ev.clientY
+            that.bindData(this)
             document.onmousemove=function (e) {
                 let ev=window.event||e
                 if(isDown==true){
@@ -860,11 +903,12 @@ class Activiti {
                     if(isDown==true){
                         dragOver(groupData,dataRow,ev)
                     }
-
                     isDown=false
                 }
             }
         })
+
+
     }
 
 //当流程节点移动的时候，折线图随之移动
@@ -960,7 +1004,32 @@ class Activiti {
         }
     }
   //以下为节点属性Js
+    bindData(movedDom){
+        //缓存节点dom
+        let $nameInputDom= $(".setArea").find("input[id='flowName']")
+        let flowDataRow=$(movedDom).attr("data-row")
+        //添加chosed Class表示被选中
+        $("#paintArea").find(".flowIcon,.tiaoJianIcon").removeClass("chosed")
+        $(movedDom).addClass("chosed")
 
+        //节点绑定到输入框
+        let moveName=$(movedDom).attr("data-name")
+        $nameInputDom.val(moveName)
+        if(flowDataRow=="FLOWSTART"||flowDataRow=="FLOWEND"){
+            $nameInputDom.attr("readonly",true)
+        }else{
+            $nameInputDom.attr("readonly",false)
+        }
+         //输入框绑定到节点
+        $nameInputDom.on("blur",function () {
+            let $chosedFlow=$("#paintArea").find(".flowIcon.chosed,.tiaoJianIcon.chosed")
+            let formName=$nameInputDom.val().length>4?$nameInputDom.val().substring(0,4)+"...":$nameInputDom.val()
+            $chosedFlow.find("span").text(formName)
+            $chosedFlow.attr("data-name",$nameInputDom.val())
+        })
+
+
+    }
 }
 
 export default Activiti
