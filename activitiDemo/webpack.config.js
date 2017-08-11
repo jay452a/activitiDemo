@@ -76,9 +76,24 @@ module.exports = {
         new ExtractTextPlugin('styles.css'),//帮助css单独打包
         //new ExtractTextPlugin('./dist/[name].less')
         new webpack.DefinePlugin({ //可以用于在生成环境上改变某些url，只要页面中用到BASEURL的地方会被替换为production
-            'BASEURL': JSON.stringify('/test')
+            'BASEURL': JSON.stringify('http://10.0.51.9:8888')
         })
 
-    ]
-	
+    ],
+    devServer: {
+        host: 'localhost',
+        port: 8080,
+        hot:false,
+        inline:false,
+        proxy:{
+            '/api':{
+                target: 'http://10.0.51.9:8888/activiti-app/app/flaginfo/',
+                pathRewrite: {"^/api" : ""},
+                secure:false
+            },
+
+
+        }
+    },
+
 };

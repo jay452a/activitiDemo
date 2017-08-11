@@ -7,6 +7,7 @@ class Activiti {
         this.addDom=null
         this.addArea=null
         this.paintArea=null
+        this.flowCreatData=null//储存流程开始时的数据
         this.operateArr=[]//用于储存操作
     }
     //一些单独方法
@@ -54,14 +55,15 @@ class Activiti {
                    "<span class='add'>添加流程</span></div>" +
                    '<span class="addTiaojian" draggable="true">条件</span>'+
                    "<button class='delFlow'>删除</button>" +
-                   "<button class='saveFlow'>保存</button>"+
+                   "<button class='saveFlow'id='saveFlowBtn'>保存</button>"+
                "</header>"
         //属性添加div
         html+='<div class="setArea">' +
                 '<h3>节点属性</h3>'+
                 '<div class="flowForm"><label for="flowName">名称</label><input type="text" id="flowName"></div>' +
-                '<div class="flowForm"><label for="flowDutyMan">负责人</label><input type="text" id="flowDutyMan"readonly></div>' +
-
+                '<div class="flowForm"><label for="flowDutyMan">负责人</label><input type="text" id="flowDutyMan"readonly class="inputRead"></div>' +
+                '<div class="flowForm"><label for="flowOption">属性</label><input type="text" id="flowOption"readonly class="inputRead"></div>' +
+                '<div class="flowForm"><label for="flowBelong">性质</label><input type="text" id="flowBelong"readonly class="inputRead"></div>' +
                 '</div>'
         //画图区域div
         html+='<div id="paintArea">' +
@@ -81,7 +83,7 @@ class Activiti {
         this.deleteLine()
         this.addNode()
         this.clickDocument()
-
+        this.saveFlow()
     }
     getStartId(){//获取开始流程ID
          let that=this
@@ -97,11 +99,14 @@ class Activiti {
          $("body").append(html)
          $("body").append(cover)
          $("#startFlowBtn").click(function () {
+             $(this).attr("disabled",true)
+             let $this=$(this)
              $(".flowStartBox").find(".errorTips").remove()
              let name=$("#startName").val()
              let des=$("#startDescribe").val()
              if(name.trim().length==""){
                  $(".flowStartBox").find("section").append('<p class="errorTips">流程名称不能为空！</p>')
+                 $this.attr("disabled",false)
                  return
              }
              let postData={
@@ -109,15 +114,21 @@ class Activiti {
                  description:des,
                  key:that.getRandString()
              }
-             console.log(BASEURL)
-             $.ajax({
-                 type:"post",
-                 url:"/test/model/create",
-                 async:true,
-                 data:postData,
-                 success:function (data) {
-
-                 }
+             Vue.http.post('/api/model/create',postData).
+             then(function (data) {
+                     console.log(data)
+                     if(data.status==200){
+                         let res=data.body
+                         sessionStorage.flowStartId=res.id
+                         sessionStorage.flowStartName=res.name
+                         sessionStorage.flowStartDes=res.description
+                         sessionStorage.flowStartKey=res.key
+                         that.flowCreatData=res
+                         $(".flowStartBox,.flowCover").remove()
+                     }
+             }, function () {
+                 $(".flowStartBox").find("section").append('<p class="errorTips">创建流程失败！</p>')
+                 $this.attr("disabled",false)
              });
          })
     }
@@ -131,10 +142,10 @@ class Activiti {
                   '</div>'
         let end='<div class="flowIcon" data-row="FLOWEND" style="left: 400px; top: 400px;"data-name="结束">' +
                     '<span>结束</span>' +
-                    '<i class="dotL" data-row="FLOWEND"></i>' +
-                    '<i class="dotR" data-row="FLOWEND"></i>' +
-                    '<i class="dotT" data-row="FLOWEND"></i>' +
-                    '<i class="dotB" data-row="FLOWEND"></i>' +
+                    '<i class="dotL" data-row="FLOWSTART"></i>' +
+                    '<i class="dotR" data-row="FLOWSTART"></i>' +
+                    '<i class="dotT" data-row="FLOWSTART"></i>' +
+                    '<i class="dotB" data-row="FLOWSTART"></i>' +
                 '</div>'
         $("#paintArea").append(start+end)
         let moveDomStart=$(".flowIcon[data-row='FLOWSTART']").get(0)
@@ -143,7 +154,10 @@ class Activiti {
         this.paintArrow(moveDomStart)
         this.moveFlowIcon(moveDomEnd)
         this.paintArrow(moveDomEnd)
-        this.getStartId()//获取开始流程ID
+        if(!sessionStorage.flowStartId){
+            this.getStartId()//获取开始流程ID
+        }
+
     }
     deleteLine(){//删除线
         $(".delFlow").click(function () {
@@ -181,6 +195,45 @@ class Activiti {
             })
         })
     }
+    svgLineClick(g){//当点击画好的线后的操作
+        $("#paintArea").find(".flowIcon,.tiaoJianIcon").removeClass("chosed")
+        $("#flowName").attr("readonly",true).addClass("inputRead")
+        $("#flowName").val("")
+        $("#flowDutyMan").val()
+        $("#flowOption").val("连接线")
+        $("#flowBelong").val("SequenceFlow")
+        $("#paintArea").find("g").not(g).removeClass("checked")
+        $("#paintArea").find("g").not(g).find("path").removeAttr("stroke-dasharray")
+        if(g.hasClass("checked")){
+            g.removeClass("checked")
+            g.find("path").removeAttr("stroke-dasharray")
+        }else{
+            g.addClass("checked")
+            g.find("path").attr("stroke-dasharray","10")
+        }
+        let from=g.attr("data-path").split("-")[0]
+        $(".setArea").find(".areaIF").remove()
+        let isFromIf=false
+        $("#paintArea").find(".tiaoJianIcon").each(function () {
+            if(from==$(this).attr("data-row")){
+                isFromIf=true
+            }
+        })
+
+        if(isFromIf==true){
+            let html='<div class="flowForm areaIF"><label for="flowIF">条件</label><input type="text" id="flowIF"placeholder="填写表达式，如${status=0}"></div>'
+            if(g.hasClass("checked")){
+                $(".setArea").append(html)
+                let gIF=g.attr("data-if")
+                $("#flowIF").val(gIF?gIF:"")
+                $("#flowIF").on("blur",function () {
+                    g.attr("data-if",$(this).val())
+                })
+            }
+        }
+
+    }
+
     addNode(){//向绘图区域添加节点
         let addArea=this.addArea  //获取添加节点
         let addTiaojian=this.addTiaojian
@@ -822,11 +875,11 @@ class Activiti {
         }
         //鼠标释放
         const dragOver=function (groupData,dataRow,cursorNode) {
-            //判断是否其他节点往开始节点画线
+            /*//判断是否其他节点往开始节点画线
             if(cursorNode.target.getAttribute("data-row")=="FLOWSTART"||cursorNode.target.parentNode.getAttribute("data-row")=="FLOWSTART"){
                 groupData.group.remove()
                 return
-            }
+            }*/
             //判断是否进入另外一个节点
             if(cursorNode.target.className=="flowIcon"||cursorNode.target.parentNode.className=="flowIcon"
                 ||cursorNode.target.className=="tiaoJianIcon"||cursorNode.target.parentNode.className=="tiaoJianIcon"){
@@ -845,13 +898,7 @@ class Activiti {
                      }
                      groupData.group.setAttribute("data-path",start+"-"+end)
                      $(groupData.group).click(function () {
-                         if($(this).hasClass("checked")){
-                             $(this).removeClass("checked")
-                             $(this).find("path").removeAttr("stroke-dasharray")
-                         }else{
-                             $(this).addClass("checked")
-                             $(this).find("path").attr("stroke-dasharray","10")
-                         }
+                         that.svgLineClick($(this))
                      })
                 }else{
                    // groupData.group.remove()
@@ -864,6 +911,9 @@ class Activiti {
         moveDom.addEventListener("mousedown",function (e) {
             let ev=window.event||e
             isDown=true
+            if(ev.target.parentNode.getAttribute("data-row")=="FLOWEND"){
+                return
+            }
             if(ev.target.nodeName=='I'){
                 document.onmousemove=null
                 document.onmouseup=null
@@ -1005,6 +1055,9 @@ class Activiti {
     }
   //以下为节点属性Js
     bindData(movedDom){
+        $(".setArea").find(".areaIF").remove()//删除条件属性
+        $("#paintArea").find("g").removeClass("checked")
+        $("#paintArea").find("g").find("path").removeAttr("stroke-dasharray")
         //缓存节点dom
         let $nameInputDom= $(".setArea").find("input[id='flowName']")
         let flowDataRow=$(movedDom).attr("data-row")
@@ -1017,18 +1070,207 @@ class Activiti {
         $nameInputDom.val(moveName)
         if(flowDataRow=="FLOWSTART"||flowDataRow=="FLOWEND"){
             $nameInputDom.attr("readonly",true)
+            $nameInputDom.addClass("inputRead")
         }else{
             $nameInputDom.attr("readonly",false)
+            $nameInputDom.removeClass("inputRead")
         }
          //输入框绑定到节点
         $nameInputDom.on("blur",function () {
             let $chosedFlow=$("#paintArea").find(".flowIcon.chosed,.tiaoJianIcon.chosed")
-            let formName=$nameInputDom.val().length>4?$nameInputDom.val().substring(0,4)+"...":$nameInputDom.val()
+            let value=$nameInputDom.val()
+            /*if(value=="开始"||value=="结束"){
+                $nameInputDom.val("")
+                $nameInputDom.focus()
+                return
+            }*/
+            let formName=value.length>4?value.substring(0,4)+"...":value
             $chosedFlow.find("span").text(formName)
             $chosedFlow.attr("data-name",$nameInputDom.val())
         })
+        //绑定流程属性
+        let className=movedDom.className
 
+        if(flowDataRow=="FLOWSTART"){
+            $("#flowBelong").val("StartNoneEvent")
+            $("#flowOption").val("开始节点")
+        }
+        if(flowDataRow=="FLOWEND"){
+            $("#flowBelong").val("EndNoneEvent")
+            $("#flowOption").val("结束节点")
+        }
+        if(flowDataRow!="FLOWSTART"&&flowDataRow!="FLOWEND"){
+            $("#flowBelong").val(className.indexOf("flowIcon")>-1?"UserTask":"ExclusiveGateway")
+            $("#flowOption").val(className.indexOf("flowIcon")>-1?"任务节点":"条件节点")
+        }
+    }
+    saveFlow(){//保存流程
+      $("#saveFlowBtn").click(function () {
+          let editTime=new Date()
+          let flowAllData={
+             "modeltype": "model",
+             "json_xml":{
+                 "resourceId":sessionStorage.flowStartId,
+                 "properties": {
+                     "process_id": sessionStorage.flowStartKey,
+                     "name": sessionStorage.flowStartName,
+                     "documentation": "",
+                     "process_author": "",
+                     "process_version": "",
+                     "process_namespace": "http://www.activiti.org/processdef",
+                     "executionlisteners": "",
+                     "eventlisteners": "",
+                     "signaldefinitions": "",
+                     "messagedefinitions": ""
+                 },
+                 "stencil": {
+                     "id": "BPMNDiagram"
+                 },
+                 "childShapes":[],
+                 "bounds": {
+                     "lowerRight": {
+                         "x": 1200,
+                         "y": 1050
+                     },
+                     "upperLeft": {
+                         "x": 0,
+                         "y": 0
+                     }
+                 },
+                 "stencilset": {
+                     "url": "stencilsets/bpmn2.0/bpmn2.0.json",
+                     "namespace": "http://b3mn.org/stencilset/bpmn2.0#"
+                 },
+                 "ssextensions": []
+             },
+             "name": sessionStorage.flowStartName,
+             "key": sessionStorage.flowStartKey,
+             "description": sessionStorage.flowStartDes,
+             "newversion": "true",
+             "comment": "",
+             "modelId": sessionStorage.flowStartId,
+             "lastUpdated": editTime
+         }
 
+          $("#paintArea").find("div").each(function () {
+              let stencil=""
+              let childIdArr=[]
+              if($(this).attr("data-row")=="FLOWSTART"){
+                  stencil="StartNoneEvent"
+              }else if($(this).attr("data-row")=="FLOWEND"){
+                  stencil="EndNoneEvent"
+              }else{
+                  if($(this).hasClass("flowIcon")){
+                      stencil="UserTask"
+                  }
+                  if($(this).hasClass("tiaoJianIcon")){
+                      stencil="ExclusiveGateway"
+                  }
+              }
+              let id=$(this).attr("data-row")
+              $("#paintArea").find("g").each(function () {
+                  if(id==$(this).attr("data-path").split("-")[0]){
+                      childIdArr.push({
+                          resourceId:$(this).attr("data-path")
+                      })
+                  }
+              })
+             
+              flowAllData.json_xml.childShapes.push({
+                  "resourceId":id,
+                  "properties": {
+                      "overrideid": "",
+                      "name": $(this).attr("data-name"),
+                      "documentation": "",
+                      "executionlisteners": "",
+                      "initiator": "",
+                      "formkeydefinition": "",
+                      "formreference": "",
+                      "formproperties": ""
+                      },
+                  "stencil": {
+                      "id": stencil
+                  },
+                  "childShapes": [],
+                  "outgoing":childIdArr,
+                  "bounds": {
+                      "lowerRight": {
+                          "x": 120,
+                          "y": 180
+                      },
+                      "upperLeft": {
+                          "x": 90,
+                          "y": 150
+                      }
+                  },
+                  "dockers": []
+              })
+          })
+
+          
+          $("#paintArea").find("g").each(function () {
+              let staticValue=$(this).attr("data-if")
+              let staticValueJson={
+                  "expression": {
+                  "type": "static",
+                      "staticValue": staticValue
+                   }
+                }
+              flowAllData.json_xml.childShapes.push(
+                  {
+                      "resourceId":$(this).attr("data-path"),
+                      "stencil":"SequenceFlow",
+                      "properties": {
+                          "overrideid": "",
+                          "name": "",
+                          "documentation": "",
+                          "conditionsequenceflow": staticValue?staticValueJson:"",
+                          "executionlisteners": "",
+                          "defaultflow": "false"
+                      },
+                      "childShapes": [],
+                      "outgoing": [
+                          {
+                              "resourceId": $(this).attr("data-path").split("-")[1]
+                          }
+                      ],
+                      "bounds": {
+                          "lowerRight": {
+                              "x": 315.6749683165235,
+                              "y": 160.98781194715332
+                          },
+                          "upperLeft": {
+                              "x": 265.8914379334765,
+                              "y": 157.06296930284668
+                          }
+                      },
+                      "dockers": [
+                          {
+                              "x": 50,
+                              "y": 40
+                          },
+                          {
+                              "x": 20.5,
+                              "y": 20.5
+                          }
+                      ],
+                      "target": {
+                          "resourceId": $(this).attr("data-path").split("-")[1]
+                      }
+                  }
+              )
+          })
+          console.log(flowAllData)
+          Vue.http.post('/api/model/editor',flowAllData).
+          then(function (data) {
+              console.log(data)
+              if(data.status==200){
+
+              }
+          }, function () {
+
+          });
+      })
     }
 }
 

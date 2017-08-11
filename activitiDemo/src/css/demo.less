@@ -11,6 +11,10 @@
 .circle{
   border-radius:50% ;
 }
+.inputRead{
+  background: #f2f2f2;
+  .defaultBorder
+}
 p.errorTips{
   color:@colorRed;
   text-align: center;
@@ -188,6 +192,11 @@ button.delFlow:hover{
 }
 #paintArea>div.flowIcon:hover i,#paintArea>div.tiaoJianIcon:hover i{
   display: inline-block;
+}
+#paintArea>div.flowIcon[data-row='FLOWEND']:hover i{
+  display: inline-block;
+  opacity: 0;
+  cursor: move;
 }
 #paintArea>div.flowIcon>i,#paintArea>div.tiaoJianIcon>i{
   width: 6px;
