@@ -79,7 +79,12 @@ class Activiti {
         this.addDom=document.querySelectorAll(".add")[0]
         this.addArea=document.querySelectorAll(".addArea")[0]
         this.addTiaojian=document.querySelectorAll(".addTiaojian")[0]
-        this.ininStartEnd()
+        if(sessionStorage.isFirstEdit!="false"){
+            this.ininStartEnd()
+        }else{
+            this.lookFlow()
+        }
+
         this.deleteLine()
         this.addNode()
         this.clickDocument()
@@ -91,7 +96,7 @@ class Activiti {
                   '<header>开始流程</header>'+
                   '<section>' +
                   '<div class="flowFlex2"><label for="startName">流程名称</label><input id="startName"type="text"maxlength="15"></div>' +
-                  '<div class="flowFlex2"><label for="startDescribe">流程描述</label><textarea id="startDescribe"maxlength="150"></textarea></div>'+
+                  //'<div class="flowFlex2"><label for="startDescribe">流程描述</label><textarea id="startDescribe"maxlength="150"></textarea></div>'+
                   '</section>'+
                   '<footer><button id="startFlowBtn">确定</button></footer>'
                   '</div>'
@@ -131,6 +136,50 @@ class Activiti {
                  $this.attr("disabled",false)
              });
          })
+    }
+    lookFlow(){//如果编辑过的就从后台获取流程
+        let that=this
+        Vue.http.post('/api/model/get',{id:sessionStorage.flowStartId}).
+        then(function (data) {
+            console.log(data)
+            if(data.status==200){
+                  let dom=JSON.parse(data.body.description)
+                  console.log(dom)
+                  for(let i=0;i<dom.line.length;i++){
+                      let svgDom=dom.line[i]
+                      let g=document.createElementNS("http://www.w3.org/2000/svg", "g");
+                      for(let key in svgDom){
+                          if(key!="child"){
+                              g.setAttribute(key,svgDom[key])
+                          }else{
+                              let path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+                              for(let sub in svgDom.child){
+                                  path.setAttribute(sub,svgDom.child[sub])
+                              }
+                              g.appendChild(path)
+                          }
+                      }
+                      g.onclick=function () {
+                          that.svgLineClick($(this))
+                      }
+                      document.getElementById("paintSvg").appendChild(g)
+                  }
+
+
+                  for(let j=0;j<dom.task.length;j++){
+                      let taskDom=dom.task[j]
+                      $("#paintArea").append(taskDom)
+                  }
+                   $("#paintArea").find("div").each(function () {
+                        that.moveFlowIcon(this)//可移动节点
+                        that.paintArrow(this)//画线
+                        that.deletFlow(this)
+                    })
+
+            }
+        }, function () {
+
+        });
     }
     ininStartEnd(){//初始化开始和结束节点
         let start='<div class="flowIcon" data-row="FLOWSTART" style="left: 400px; top: 100px;"data-name="开始">' +
@@ -298,6 +347,7 @@ class Activiti {
         }
     }
     moveFlowIcon(movedDom){//可在绘图区域内移动节点
+        console.log(movedDom,1)
         let isDown=false
         let x
         let y
@@ -1107,6 +1157,27 @@ class Activiti {
     saveFlow(){//保存流程
       $("#saveFlowBtn").click(function () {
           let editTime=new Date()
+          let saveHtml={task:[],line:[]}
+          $("#paintArea").find("div").each(function () {
+              saveHtml.task.push(this.outerHTML)
+          })
+          $("#paintSvg").find("g").each(function () {
+              let path=$(this).find("path")
+              saveHtml.line.push({
+                  "data-start":$(this).attr("data-start"),
+                  "data-end":$(this).attr("data-end"),
+                  "data-path":$(this).attr("data-path"),
+                  "child":{
+                      "d":path.attr("d"),
+                      "fill":path.attr("fill"),
+                      "stroke":path.attr("stroke"),
+                      "stroke-width":path.attr("stroke-width"),
+                      "marker-end":path.attr("marker-end"),
+                      "data-if":path.attr("data-if"),
+                  }
+              })
+          })
+          console.log(saveHtml)
           let flowAllData={
              "modeltype": "model",
              "json_xml":{
@@ -1145,7 +1216,7 @@ class Activiti {
              },
              "name": sessionStorage.flowStartName,
              "key": sessionStorage.flowStartKey,
-             "description": sessionStorage.flowStartDes,
+             "description":saveHtml,
              "newversion": "true",
              "comment": "",
              "modelId": sessionStorage.flowStartId,
@@ -1175,7 +1246,7 @@ class Activiti {
                       })
                   }
               })
-             
+
               flowAllData.json_xml.childShapes.push({
                   "resourceId":id,
                   "properties": {
@@ -1210,21 +1281,15 @@ class Activiti {
           
           $("#paintArea").find("g").each(function () {
               let staticValue=$(this).attr("data-if")
-              let staticValueJson={
-                  "expression": {
-                  "type": "static",
-                      "staticValue": staticValue
-                   }
-                }
               flowAllData.json_xml.childShapes.push(
                   {
                       "resourceId":$(this).attr("data-path"),
-                      "stencil":"SequenceFlow",
+                      "stencil":{"id":"SequenceFlow"},
                       "properties": {
                           "overrideid": "",
                           "name": "",
                           "documentation": "",
-                          "conditionsequenceflow": staticValue?staticValueJson:"",
+                          "conditionsequenceflow": staticValue?staticValue:"",
                           "executionlisteners": "",
                           "defaultflow": "false"
                       },
@@ -1265,7 +1330,7 @@ class Activiti {
           then(function (data) {
               console.log(data)
               if(data.status==200){
-
+                  sessionStorage.isFirstEdit=false
               }
           }, function () {
 
