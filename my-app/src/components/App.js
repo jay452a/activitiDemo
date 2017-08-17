@@ -1,11 +1,28 @@
 import React, { Component } from 'react';
-import logo from '../img/logo.svg';
+import "../css/vacation.css";
 import '../css/App.css';
-import { BrowserRouter as Router,Route,Link,Redirect  } from "react-router-dom";
+import { BrowserRouter as Router,Route,Link,Redirect, NavLink } from "react-router-dom";
+import Report from "./vacation/report"
+import History from "./vacation/history"
 
-const Home = () => (
+const vacation = ({ match }) => (
     <div>
-        <h2>Home</h2>
+        <ul className="vacationTitle">
+            <li>
+                <NavLink to={`${match.url}/report`} activeClassName="selected">
+                    请假申请
+                </NavLink>
+            </li>
+            <li>
+                <NavLink to={`${match.url}/history`} activeClassName="selected">
+                    请假记录
+                </NavLink>
+            </li>
+        </ul>
+
+        <Route path={`${match.url}/report`} component={Report}/>
+        <Route path={`${match.url}/history`} component={History}/>
+        <Route exact path={match.url} component={Report}/>
     </div>
 )
 
@@ -72,11 +89,12 @@ class BasicExample extends Component{
         super(props)
         this.state={
             name:"jimmy",
-            data:[]
+            data:[],
+            error:false
         }
     }
     componentDidMount() {
-        let _this=this
+       /* let _this=this
         fetch('/json/logs.json',{method: 'GET'}).then(function(response) {
            return response.json()
         }).then(function (res) {
@@ -86,8 +104,10 @@ class BasicExample extends Component{
                 name:"jimmyBack"
             })
         }).catch(function () {
-            alert("error")
-        });
+            _this.setState({
+                error:true
+            })
+        });*/
     }
 
     componentWillUnmount() {
@@ -97,23 +117,7 @@ class BasicExample extends Component{
         return (
             <Router>
                 <div>
-                    <ul>
-                        <li><Link to="/">Home</Link></li>
-                        <li><Link to="/about">About</Link></li>
-                        <li><Link to="/topics">Topics</Link></li>
-                    </ul>
-                    <p>{`${this.state.name} is my name`}</p>
-                    <ul>
-                        {
-                           this.state.data.map( (item,index) => {
-                               return <li>NO{index}.{item.userID}</li>
-                           })
-                        }
-                    </ul>
-
-                    <hr/>
-
-                    <Route exact path="/" component={Home}/>
+                    <Route path="/vacation" component={vacation}/>
                     <Route path="/about" component={About}/>
                     <Route path="/topics" component={Topics}/>
                 </div>
